@@ -2,7 +2,7 @@
 import httpx
 
 _TIMEOUT = httpx.Timeout(10.0)
-_HEADERS = {"User-Agent": "hk-live-mcp/0.1 (+https://github.com/henry5b17/hk-live-mcp)"}
+_HEADERS = {"User-Agent": "hk-live-mcp/0.1 (+https://github.com/henrylai0627/hk-live-mcp)"}
 
 
 async def get_json(url: str, params: dict | None = None) -> dict:
