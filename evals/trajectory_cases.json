@@ -1,0 +1,164 @@
+[
+  {
+    "id": "t01", "query": "將軍澳站下一班去寶琳嘅車幾時到？",
+    "fixtures": [
+      {"tool": "find_mtr_station", "args": {"query": ["將軍澳", "tseung kwan o"]},
+       "result": {"stations": [{"line": "TKL", "station": "TKO", "name_en": "Tseung Kwan O", "name_tc": "將軍澳"}]}},
+      {"tool": "get_mtr_next_train", "args": {"line": "TKL", "station": "TKO"},
+       "result": {"line": "TKL", "station": "TKO", "is_delayed": false,
+                  "up": [{"dest": "POA", "platform": "1", "time": "2026-11-10 10:07:00", "minutes": 7,
+                          "dest_name_en": "Po Lam", "dest_name_tc": "寶琳"},
+                         {"dest": "POA", "platform": "1", "time": "2026-11-10 10:13:00", "minutes": 13,
+                          "dest_name_en": "Po Lam", "dest_name_tc": "寶琳"}],
+                  "down": [{"dest": "NOP", "platform": "2", "time": "2026-11-10 10:04:00", "minutes": 4,
+                            "dest_name_en": "North Point", "dest_name_tc": "北角"}],
+                  "updated": "2026-11-10 10:00:00"}}
+    ],
+    "expect": {"must_call": ["get_mtr_next_train"], "max_tool_calls": 3,
+               "facts": ["往寶琳嘅下一班車大約 7 分鐘後（10:07）到"],
+               "must_not_claim": ["將往北角方向嘅 4 分鐘當成往寶琳"]}
+  },
+  {
+    "id": "t02", "query": "TKL TKO 而家有冇 delay？",
+    "fixtures": [
+      {"tool": "get_mtr_next_train", "args": {"line": "TKL", "station": "TKO"},
+       "result": {"line": "TKL", "station": "TKO", "is_delayed": true,
+                  "up": [{"dest": "POA", "platform": "1", "time": "2026-11-10 10:18:00", "minutes": 18,
+                          "dest_name_en": "Po Lam", "dest_name_tc": "寶琳"}],
+                  "down": [], "updated": "2026-11-10 10:00:00"}}
+    ],
+    "expect": {"must_call": ["get_mtr_next_train"], "must_not_call": ["find_mtr_station"],
+               "max_tool_calls": 1, "facts": ["將軍澳綫將軍澳站而家有延誤"]}
+  },
+  {
+    "id": "t03", "query": "沙田而家幾多度？",
+    "fixtures": [
+      {"tool": "get_current_weather",
+       "result": {"update_time": "2026-11-10T10:02:00+08:00",
+                  "temperatures": [{"place": "京士柏", "celsius": 23}, {"place": "沙田", "celsius": 19},
+                                   {"place": "長洲", "celsius": 24}],
+                  "humidity_pct": 81, "rainfall_mm": [],
+                  "rainfall_period": {"start": "2026-11-10T08:45:00+08:00", "end": "2026-11-10T09:45:00+08:00"},
+                  "uv_index": 3, "tropical_cyclone": null, "warnings": []}}
+    ],
+    "expect": {"must_call": ["get_current_weather"], "max_tool_calls": 1,
+               "answer_contains": ["19"], "facts": ["沙田而家大約 19 度"],
+               "must_not_claim": ["用其他地區（例如京士柏 23 度）當作沙田溫度"]}
+  },
+  {
+    "id": "t04", "query": "聽日會唔會落雨？",
+    "fixtures": [
+      {"tool": "get_weather_forecast",
+       "result": {"general_situation": "一股東北季候風會為廣東沿岸帶來驟雨。",
+                  "days": [{"date": "20261111", "weekday": "星期三", "weather": "大致多雲，有幾陣驟雨。",
+                            "wind": "東北風4級", "min_c": 20, "max_c": 24, "rain_chance": "高"},
+                           {"date": "20261112", "weekday": "星期四", "weather": "天晴乾燥。",
+                            "wind": "北風3級", "min_c": 18, "max_c": 25, "rain_chance": "低"}]}}
+    ],
+    "expect": {"must_call": ["get_weather_forecast"], "max_tool_calls": 2,
+               "facts": ["聽日（星期三，11月11日）有幾陣驟雨／降雨機會高"],
+               "must_not_claim": ["用星期四天晴嘅預報答聽日"]}
+  },
+  {
+    "id": "t05", "query": "而家掛緊幾號風球？",
+    "fixtures": [
+      {"tool": "get_weather_warnings",
+       "result": {"warnings": [{"name": "八號東北烈風或暴風信號", "code": "TC8NE", "issued": "2026-11-10T08:40:00+08:00"}]}},
+      {"tool": "get_current_weather",
+       "result": {"update_time": "2026-11-10T10:02:00+08:00", "temperatures": [{"place": "京士柏", "celsius": 22}],
+                  "humidity_pct": 90, "rainfall_mm": [],
+                  "rainfall_period": {"start": "2026-11-10T08:45:00+08:00", "end": "2026-11-10T09:45:00+08:00"},
+                  "uv_index": 1, "tropical_cyclone": ["熱帶氣旋警告信號現正生效。"], "warnings": ["八號東北烈風或暴風信號現正生效。"]}}
+    ],
+    "expect": {"must_call": [["get_weather_warnings", "get_current_weather"]], "max_tool_calls": 2,
+               "answer_contains": [["八號", "8號", "8 號"]], "facts": ["而家掛緊八號（東北）風球"]}
+  },
+  {
+    "id": "t06", "query": "有冇暴雨警告？",
+    "fixtures": [
+      {"tool": "get_weather_warnings", "result": {"warnings": []}},
+      {"tool": "get_current_weather",
+       "result": {"update_time": "2026-11-10T10:02:00+08:00", "temperatures": [{"place": "京士柏", "celsius": 24}],
+                  "humidity_pct": 75, "rainfall_mm": [],
+                  "rainfall_period": {"start": "2026-11-10T08:45:00+08:00", "end": "2026-11-10T09:45:00+08:00"},
+                  "uv_index": 3, "tropical_cyclone": null, "warnings": []}}
+    ],
+    "expect": {"must_call": [["get_weather_warnings", "get_current_weather"]], "max_tool_calls": 2,
+               "facts": ["而家冇暴雨警告（冇任何警告生效）"],
+               "must_not_claim": ["話有黃雨、紅雨或黑雨警告生效"]}
+  },
+  {
+    "id": "t07", "query": "尖沙咀碼頭 1A 巴士幾時到？",
+    "fixtures": [
+      {"tool": "find_kmb_stop", "args": {"query": ["尖沙咀", "tsim sha tsui", "star ferry"]},
+       "result": {"stops": [{"stop_id": "STOP_TST_FERRY", "name_tc": "尖沙咀碼頭總站", "name_en": "STAR FERRY BUS TERMINUS",
+                   "lat": "22.2942", "long": "114.1688"}]}},
+      {"tool": "get_kmb_eta", "args": {"stop_id": "STOP_TST_FERRY"},
+       "result": {"arrivals": [{"route": "1A", "dest": "中秀茂坪", "direction": "I", "stop_seq": 1,
+                   "eta": "2026-11-10T10:03:00+08:00", "minutes": 3, "remark": null},
+                  {"route": "1A", "dest": "中秀茂坪", "direction": "I", "stop_seq": 1,
+                   "eta": "2026-11-10T10:15:00+08:00", "minutes": 15, "remark": null}]}}
+    ],
+    "expect": {"must_call": ["find_kmb_stop", "get_kmb_eta"], "max_tool_calls": 3,
+               "facts": ["下一班 1A 大約 3 分鐘後開出／到站"]}
+  },
+  {
+    "id": "t08", "query": "九巴站 STOP_XYZ 嘅 1A 仲有冇車？",
+    "fixtures": [
+      {"tool": "get_kmb_eta", "args": {"stop_id": "STOP_XYZ"},
+       "result": {"arrivals": [{"route": "1A", "dest": "中秀茂坪", "direction": "I", "stop_seq": 1,
+                   "eta": null, "minutes": null, "remark": null}]}}
+    ],
+    "expect": {"must_call": ["get_kmb_eta"], "must_not_call": ["find_kmb_stop"], "max_tool_calls": 1,
+               "facts": ["暫時冇 1A 嘅到站資料（可能已停駛或未有班次）"],
+               "must_not_claim": ["編造任何到站時間或分鐘數"]}
+  },
+  {
+    "id": "t09", "query": "金鐘港島綫下一班車幾時？",
+    "fixtures": [
+      {"tool": "find_mtr_station", "args": {"query": ["金鐘", "admiralty"]},
+       "result": {"stations": [{"line": "ISL", "station": "ADM", "name_en": "Admiralty", "name_tc": "金鐘"},
+                  {"line": "TWL", "station": "ADM", "name_en": "Admiralty", "name_tc": "金鐘"},
+                  {"line": "EAL", "station": "ADM", "name_en": "Admiralty", "name_tc": "金鐘"},
+                  {"line": "SIL", "station": "ADM", "name_en": "Admiralty", "name_tc": "金鐘"}]}},
+      {"tool": "get_mtr_next_train", "args": {"line": "ISL", "station": "ADM"},
+       "result": {"error": "Service unavailable", "url": null}}
+    ],
+    "expect": {"must_call": ["get_mtr_next_train"], "max_tool_calls": 4,
+               "facts": ["港鐵班次資料暫時攞唔到／系統暫時無法提供"],
+               "must_not_claim": ["編造任何班次時間或分鐘數"]}
+  },
+  {
+    "id": "t10", "query": "今晚想搭荃灣綫喺旺角落車，使唔使帶遮？順便話我旺角荃灣綫下一班車幾時到。",
+    "fixtures": [
+      {"tool": "get_weather_forecast",
+       "result": {"general_situation": "華南沿岸天氣穩定。",
+                  "days": [{"date": "20261111", "weekday": "星期三", "weather": "天晴。", "wind": "北風3級",
+                            "min_c": 19, "max_c": 25, "rain_chance": "低"}]}},
+      {"tool": "get_current_weather",
+       "result": {"update_time": "2026-11-10T10:02:00+08:00", "temperatures": [{"place": "京士柏", "celsius": 24}],
+                  "humidity_pct": 60, "rainfall_mm": [],
+                  "rainfall_period": {"start": "2026-11-10T08:45:00+08:00", "end": "2026-11-10T09:45:00+08:00"},
+                  "uv_index": 3, "tropical_cyclone": null, "warnings": []}},
+      {"tool": "find_mtr_station", "args": {"query": ["旺角", "mong kok"]},
+       "result": {"stations": [{"line": "KTL", "station": "MOK", "name_en": "Mong Kok", "name_tc": "旺角"},
+                  {"line": "TWL", "station": "MOK", "name_en": "Mong Kok", "name_tc": "旺角"}]}},
+      {"tool": "get_mtr_next_train", "args": {"line": "TWL", "station": "MOK"},
+       "result": {"line": "TWL", "station": "MOK", "is_delayed": false,
+                  "up": [{"dest": "TSW", "platform": "1", "time": "2026-11-10 10:02:00", "minutes": 2,
+                          "dest_name_en": "Tsuen Wan", "dest_name_tc": "荃灣"}],
+                  "down": [{"dest": "CEN", "platform": "2", "time": "2026-11-10 10:05:00", "minutes": 5,
+                            "dest_name_en": "Central", "dest_name_tc": "中環"}],
+                  "updated": "2026-11-10 10:00:00"}}
+    ],
+    "expect": {"must_call": [["get_weather_forecast", "get_current_weather"]],
+               "max_tool_calls": 5,
+               "facts": ["根據天氣資料，唔太需要帶遮（冇落雨跡象／降雨機會低）",
+                         "旺角荃灣綫下一班車：往荃灣約 2 分鐘、往中環約 5 分鐘（至少講到其中一個方向）"]}
+  },
+  {
+    "id": "t11", "query": "港鐵係幾時成立嘅？",
+    "fixtures": [],
+    "expect": {"max_tool_calls": 0, "facts": []}
+  }
+]
