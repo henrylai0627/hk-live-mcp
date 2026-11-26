@@ -22,17 +22,45 @@ All tools are read-only and need no API key.
 
 ## Quick start
 
+Requires Python 3.11+.
+
+```bash
+git clone https://github.com/henrylai0627/hk-live-mcp.git
+cd hk-live-mcp
+```
+
+**With [uv](https://docs.astral.sh/uv/):**
+
 ```bash
 uv sync
 uv run pytest
 uv run mcp dev src/hk_live_mcp/server.py   # MCP Inspector in browser
 ```
 
-### Add to Claude Code
+**With plain pip** (needs pip 25.1+ for `--group`):
 
 ```bash
-claude mcp add hk-live -- uv --directory /ABSOLUTE/PATH/hk-live-mcp run hk-live-mcp
+python3 -m venv .venv
+.venv/bin/pip install -e . --group dev
+.venv/bin/pytest
+.venv/bin/mcp dev src/hk_live_mcp/server.py   # MCP Inspector in browser
 ```
+
+### Add to Claude Code
+
+Use absolute paths; the server is started from whatever directory Claude Code runs in.
+
+```bash
+# uv
+claude mcp add hk-live -- uv --directory /ABSOLUTE/PATH/hk-live-mcp run hk-live-mcp
+
+# pip / venv
+claude mcp add hk-live -- /ABSOLUTE/PATH/hk-live-mcp/.venv/bin/hk-live-mcp
+```
+
+By default the server is registered for the current project only; add `-s user` to make it
+available in every project. Check it with `claude mcp get hk-live` (expect `Status: ✔ Connected`)
+and remove it with `claude mcp remove hk-live`.
 
 ### Add to Claude Desktop (`claude_desktop_config.json`)
 
@@ -46,6 +74,8 @@ claude mcp add hk-live -- uv --directory /ABSOLUTE/PATH/hk-live-mcp run hk-live-
   }
 }
 ```
+
+Without uv, set `"command"` to `/ABSOLUTE/PATH/hk-live-mcp/.venv/bin/hk-live-mcp` and `"args"` to `[]`.
 
 ## Design decisions
 
@@ -75,6 +105,9 @@ uv run python -m evals.tool_selection --dry-run              # validate cases, n
 export ANTHROPIC_API_KEY=...
 uv run python -m evals.tool_selection --model claude-haiku-5-5 --runs 3
 ```
+
+Without uv: `.venv/bin/pip install --group evals`, then use `.venv/bin/python` in place of
+`uv run python`.
 
 Each run is saved to `evals/results/`. `--runs N` repeats every case to expose flaky behaviour;
 `--threshold 0.9` exits non-zero for CI.
