@@ -6,8 +6,8 @@ so they are written for the model, not for humans.
 from mcp.server.mcpserver import MCPServer
 from mcp.types import ToolAnnotations
 
-from .clients import hko, kmb, mtr
-from .clients.hko import Lang
+from hk_live_mcp.clients import hko, kmb, mtr
+from hk_live_mcp.clients.hko import Lang
 
 mcp = MCPServer(
     "hk-live",
