@@ -82,7 +82,8 @@ async def find_kmb_stop(query: str, limit: int = 10) -> dict:
 async def get_kmb_eta(stop_id: str, route: str | None = None) -> dict:
     """Real-time KMB bus arrivals at a stop, in minutes from now.
     A row with `minutes` null is a route that serves the stop but has no bus
-    scheduled right now (see `remark`). Empty `arrivals` means an unknown stop ID.
+    scheduled right now (see `remark`). Empty `arrivals` means the stop ID is
+    unknown or, when `route` is given, that the route does not serve this stop.
     `direction` is "O" (outbound) or "I" (inbound). `stop_seq` 1 means the bus
     starts its journey here; a bus whose `dest` is this stop is terminating
     here and cannot be boarded.
